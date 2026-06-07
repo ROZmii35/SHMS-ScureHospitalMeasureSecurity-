@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <title>Upload Hasil Lab</title>
+</head>
+
+<body>
+
+<h2>Upload Hasil Lab</h2>
+
+<form method="post"
+      enctype="multipart/form-data"
+      action="/upload">
+
+    <input type="file"
+           name="file">
+
+    <button type="submit">
+        Upload
+    </button>
+
+</form>
+
+<p th:text="${message}"></p>
+
+</body>
+</html>
