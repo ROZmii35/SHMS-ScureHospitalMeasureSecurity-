@@ -7,4 +7,5 @@ import java.util.Optional;
 @Repository
 public interface UploadedFileRepository extends JpaRepository<UploadedFile, Long> {
     Optional<UploadedFile>findByFileHash(String hash);
+    long countByIsScannedFalse();
 }

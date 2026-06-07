@@ -1,5 +1,4 @@
 package com.shms.service;
-
 import com.shms.dto.*;
 import com.shms.dto.request.*;
 import com.shms.entity.*;
@@ -19,31 +18,49 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final AuthenticationManager authManager;
-
+    private final LoginAttemptService attemptService;
     public String register(RegisterRequest request) {
         Role role = roleRepository.findByRoleName(
-                        request.getRole())
+                        request.getRole()
+                )
                 .orElseThrow();
         User user = User.builder()
-                .fullname(request.getFullname())
-                .email(request.getEmail())
+                .fullname(
+                        request.getFullname()
+                )
+                .email(
+                        request.getEmail()
+                )
                 .passwordHash(
                         passwordEncoder.encode(
-                                request.getPassword()))
-                .role(role)
+                                request.getPassword()
+                        )
+                )
+                .role(
+                        role
+                )
                 .build();
-        userRepository.save(user);
+        userRepository.save(
+                user
+        );
         return "Register success";
     }
     public String login(LoginRequest request) {
-        authManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        request.getEmail(),
-                        request.getPassword()
-                )
-        );
-        return jwtService.generateToken(
-                request.getEmail()
-        );
+        if(attemptService.isBlocked(request.getEmail())){
+            throw new RuntimeException("Account temporarily blocked");
+        } try{
+            authManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            request.getEmail(),
+                            request.getPassword()
+                    )
+            );
+            attemptService.loginSuccess(request.getEmail());
+            String token = jwtService.generateToken(request.getEmail());
+            return token;
+        }catch(Exception e){
+            attemptService.loginFailed(request.getEmail());
+            throw new RuntimeException("Invalid credentials");
+        }
     }
 }

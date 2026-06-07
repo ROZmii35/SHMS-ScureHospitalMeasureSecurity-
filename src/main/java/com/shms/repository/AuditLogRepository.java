@@ -7,4 +7,5 @@ import java.util.List;
 @Repository
 public interface AuditLogRepository extends JpaRepository<AuditLog, Long> {
     List<AuditLog>findBySeverity(String severity);
+    long countBySeverity(String severity);List<AuditLog>findTop10ByOrderByCreatedAtDesc();
 }

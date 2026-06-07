@@ -1,4 +1,5 @@
 package com.shms.config;
+import com.shms.filter.RateLimitFilter;
 import com.shms.security.CustomUserDetailsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.*;
@@ -15,6 +16,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @RequiredArgsConstructor
 public class SecurityConfig {
     private final JwtAuthenticationFilter jwtFilter;
+    private final RateLimitFilter rateLimitFilter;
     private final CustomUserDetailsService userDetailsService;
     @Bean
     public SecurityFilterChain securityFilterChain(
@@ -37,6 +39,8 @@ public class SecurityConfig {
                                 "PERAWAT",
                                 "ADMIN"
                         )
+                        .requestMatchers("/api/monitor/**")
+                        .hasRole("ADMIN")
                         .requestMatchers("/api/patient/**")
                         .hasAnyRole(
                                 "PASIEN",
@@ -62,6 +66,10 @@ public class SecurityConfig {
                         )
                         .anyRequest()
                         .authenticated()
+                )
+                .addFilterBefore(        
+                        rateLimitFilter, 
+                        UsernamePasswordAuthenticationFilter.class
                 )
                 .addFilterBefore(
                         jwtFilter,

@@ -7,4 +7,5 @@ import java.util.Optional;
 @Repository
 public interface LoginAttemptRepository extends JpaRepository<LoginAttempt, Long> {
     Optional<LoginAttempt>findByEmail(String email);
+    long countByBlockedTrue();
 }

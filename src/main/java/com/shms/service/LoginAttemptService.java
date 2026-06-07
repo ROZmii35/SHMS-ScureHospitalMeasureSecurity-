@@ -45,9 +45,7 @@ public class LoginAttemptService {
                 attempt
         );
     }
-    public void loginSuccess(
-            String email
-    ){
+    public void loginSuccess(String email){
         LoginAttempt attempt =
                 repository.findByEmail(
                         email
