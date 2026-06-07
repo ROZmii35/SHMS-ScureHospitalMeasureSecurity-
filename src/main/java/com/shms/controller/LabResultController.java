@@ -1,33 +1,22 @@
 package com.shms.controller;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 import com.shms.service.LabResultService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
-@Controller
+@RestController
+@RequestMapping("/api/lab-result")
 @RequiredArgsConstructor
 public class LabResultController {
     private final LabResultService service;
-    @GetMapping("/upload")
-    public String uploadPage() {
-        return "upload";
-    }
-    @PostMapping("/upload")
-    public String uploadFile(@RequestParam("file") MultipartFile file,Model model) {
+    @PostMapping(consumes = "multipart/form-data")
+    public ResponseEntity<?> upload(
+            @RequestParam("file") MultipartFile file) {
         try {
-            service.saveFile(file);
-            model.addAttribute(
-                "message",
-                "Upload berhasil"
-            );
+            return ResponseEntity.ok(service.saveFile(file));
         } catch (Exception e) {
-            model.addAttribute(
-                "message",
-                e.getMessage()
-            );
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
-        return "upload";
     }
 }

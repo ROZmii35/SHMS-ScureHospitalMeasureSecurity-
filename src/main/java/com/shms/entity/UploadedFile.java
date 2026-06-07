@@ -3,12 +3,12 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Table(name="uploaded_files")
+@Table(name = "uploaded_files")
 @Getter
 @Setter
 public class UploadedFile {
     @Id
-    @GeneratedValue(strategy=GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long fileId;
     @ManyToOne
     private User uploader;
@@ -17,15 +17,10 @@ public class UploadedFile {
     private String fileHash;
     private String mimeType;
     private Boolean isScanned;
+    private Long fileSize;          // TAMBAH field ini
     private Long patientId;
-
     private Long medicalRecordId;
-
     private String category;
-
     private String description;
-    public void setFileSize(long size) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'setFileSize'");
-    }
+    // HAPUS method setFileSize() manual yang lama
 }

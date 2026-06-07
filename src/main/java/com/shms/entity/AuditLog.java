@@ -3,12 +3,12 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Table(name="audit_logs")
+@Table(name = "audit_logs")
 @Getter
 @Setter
-public class AuditLog {
+public class AuditLog extends BaseEntity {
     @Id
-    @GeneratedValue(strategy=GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long logId;
     @ManyToOne
     private User user;
