@@ -36,9 +36,15 @@ implements Filter {
         HttpServletRequest req =
                 (HttpServletRequest)
                         request;
+         // NONAKTIFKAN RATE LIMIT SEMENTARA
+        if (true) {
+                chain.doFilter(request, response);
+                return;
+        }
         HttpServletResponse res =
                 (HttpServletResponse)
                         response;
+                        
         String ip =
                 req.getRemoteAddr();
         Bucket bucket =

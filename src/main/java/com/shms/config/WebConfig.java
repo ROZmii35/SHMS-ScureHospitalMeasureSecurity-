@@ -8,6 +8,7 @@ import org.springframework.web.servlet.config.annotation.*;
 public class WebConfig
 implements WebMvcConfigurer {
     private final AuditInterceptor interceptor;
+    @SuppressWarnings("null")
     @Override
     public void addInterceptors(
             @SuppressWarnings("null") InterceptorRegistry registry
