@@ -2,7 +2,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User, UserRole } from '../types';
 
-const BASE_URL = "http://localhost:8080";
+const BASE_URL = "http://localhost";  // port 80
 
 interface AuthContextType {
     user: User | null;
@@ -18,20 +18,44 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+async function fetchProfile(token: string): Promise<User | null> {
+    try {
+        const res = await fetch(`${BASE_URL}/api/users/me`, {
+            headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) return null;
+        return await res.json();
+    } catch {
+        return null;
+    }
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
     const [user, setUser] = useState<User | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        const stored = sessionStorage.getItem("user");
-        const remembered = localStorage.getItem("rememberedUser");
-        if (stored) setUser(JSON.parse(stored));
-        else if (remembered) {
-            const parsed = JSON.parse(remembered);
-            setUser(parsed);
-            sessionStorage.setItem("user", JSON.stringify(parsed));
+        async function restore() {
+            const token = sessionStorage.getItem("authToken")
+                ?? localStorage.getItem("authToken");
+            if (!token) { setIsLoading(false); return; }
+
+            const cached = sessionStorage.getItem("user") ?? localStorage.getItem("user");
+            if (cached) setUser(JSON.parse(cached));
+
+            const profile = await fetchProfile(token);
+            if (profile) {
+                setUser(profile);
+                sessionStorage.setItem("user", JSON.stringify(profile));
+            } else {
+                sessionStorage.clear();
+                localStorage.removeItem("authToken");
+                localStorage.removeItem("user");
+                setUser(null);
+            }
+            setIsLoading(false);
         }
-        setIsLoading(false);
+        restore();
     }, []);
 
     const login = async (email: string, password: string, rememberMe?: boolean) => {
@@ -42,16 +66,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ email, password }),
             });
+
+            const data = await res.json();
+
             if (!res.ok) {
-                const msg = await res.text();
-                return { success: false, error: msg || "Login gagal" };
+                return { success: false, error: data.error || "Email atau password salah" };
             }
-            const token: string = await res.text();  // backend returns plain JWT string
+
+            // Response sekarang JSON: { token: "..." }
+            const token: string = data.token;
             sessionStorage.setItem("authToken", token);
-            const sessionUser: User = { id: "", email, name: email, role: "patient" };
-            setUser(sessionUser);
-            sessionStorage.setItem("user", JSON.stringify(sessionUser));
-            if (rememberMe) localStorage.setItem("rememberedUser", JSON.stringify(sessionUser));
+            if (rememberMe) localStorage.setItem("authToken", token);
+
+            const profile = await fetchProfile(token);
+            if (profile) {
+                setUser(profile);
+                sessionStorage.setItem("user", JSON.stringify(profile));
+                if (rememberMe) localStorage.setItem("user", JSON.stringify(profile));
+            }
+
             return { success: true };
         } catch (e: unknown) {
             return { success: false, error: (e as Error).message };
@@ -74,9 +107,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                     fullname: name, email, password, role: roleMap[role],
                 }),
             });
+            const data = await res.json();
             if (!res.ok) {
-                const msg = await res.text();
-                return { success: false, error: msg || "Register gagal" };
+                return { success: false, error: data.error || "Register gagal" };
             }
             return { success: true };
         } catch (e: unknown) {
@@ -88,9 +121,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const logout = () => {
         setUser(null);
-        sessionStorage.removeItem("user");
-        sessionStorage.removeItem("authToken");
-        localStorage.removeItem("rememberedUser");
+        sessionStorage.clear();
+        localStorage.removeItem("authToken");
+        localStorage.removeItem("user");
     };
 
     const updateProfile = (updates: Partial<User>) => {

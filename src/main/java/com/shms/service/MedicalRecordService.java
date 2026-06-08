@@ -15,6 +15,7 @@ public class MedicalRecordService {
     private final DoctorRepository doctorRepository;
     private final AppointmentRepository appointmentRepository;
     private final AuditLogService auditService;
+    private final EncryptionUtil encryptionUtil;
     public MedicalRecordResponse create(CreateMedicalRecordRequest request){
         if(medicalRecordRepository.existsByAppointmentAppointmentId(request.getAppointmentId())){
             throw new RuntimeException("Medical record exists");
@@ -37,7 +38,7 @@ public class MedicalRecordService {
         record.setDoctor(doctor);
         record.setDiagnosis(request.getDiagnosis());
         record.setTreatment(request.getTreatment());
-        record.setNotesEncrypted(EncryptionUtil.encrypt(
+        record.setNotesEncrypted(encryptionUtil.encrypt(
             request.getNotes()
         ));
         medicalRecordRepository.save(record);

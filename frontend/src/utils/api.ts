@@ -1,6 +1,6 @@
 // src/utils/api.ts
 
-const BASE_URL = "http://localhost:8080";
+const BASE_URL = "http://localhost";
 
 function getToken(): string | null {
     return sessionStorage.getItem("authToken");

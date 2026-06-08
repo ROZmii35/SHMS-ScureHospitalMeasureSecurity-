@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Create Account - MedClinic</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>M</text></svg>" />
+  <script type="module" crossorigin src="/assets/register-DwRyJp4x.js"></script>
+  <link rel="modulepreload" crossorigin href="/assets/auth-B4AlU-wO.js">
+  <link rel="stylesheet" crossorigin href="/assets/auth-BCh_zKyI.css">
+</head>
+<body>
+  <div class="auth-page">
+    <div class="auth-left">
+      <div class="auth-left-content">
+        <h1>Join MedClinic</h1>
+        <p>Create your account and start managing your clinic with powerful tools designed for healthcare professionals.</p>
+      </div>
+    </div>
+    <div class="auth-right">
+      <div class="auth-form-wrapper">
+        <h2>Create Account</h2>
+        <p class="auth-subtitle">Get started with your free clinic management account</p>
+
+        <div class="auth-error" id="auth-error"></div>
+
+        <form id="register-form">
+          <div class="form-group">
+            <label for="email">Email Address</label>
+            <input type="email" id="email" class="form-input" placeholder="you@example.com" required />
+          </div>
+          <div class="form-group">
+            <label for="password">Password</label>
+            <input type="password" id="password" class="form-input" placeholder="Min. 6 characters" minlength="6" required />
+          </div>
+          <div class="form-group">
+            <label for="confirm-password">Confirm Password</label>
+            <input type="password" id="confirm-password" class="form-input" placeholder="Repeat your password" minlength="6" required />
+          </div>
+          <button type="submit" class="btn btn-primary" id="submit-btn">Create Account</button>
+        </form>
+
+        <div class="auth-footer">
+          Already have an account? <a href="/pages/login.html">Sign in</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>
