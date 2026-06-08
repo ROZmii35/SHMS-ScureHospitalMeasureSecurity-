@@ -24,10 +24,6 @@ public class SecurityConfig {
     private final RateLimitFilter rateLimitFilter;
     private final CustomUserDetailsService userDetailsService;
 
-    /**
-     * FIX: Wiring UserDetailsService + PasswordEncoder ke AuthenticationManager.
-     * Tanpa bean ini Spring tidak tahu pakai DB → login selalu gagal.
-     */
     @Bean
     public DaoAuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
@@ -39,6 +35,9 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
+            // ── CORS: aktifkan agar WebConfig.addCorsMappings() dipakai ──
+            .cors(cors -> {})
+
             // ── CSRF: disabled karena stateless JWT ──────────────────
             .csrf(csrf -> csrf.disable())
 
@@ -46,7 +45,7 @@ public class SecurityConfig {
             .sessionManagement(session ->
                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
-            // ── Security Headers (XSS, Clickjacking, MIME sniff) ─────
+            // ── Security Headers ──────────────────────────────────────
             .headers(headers -> headers
                 .xssProtection(xss -> xss
                     .headerValue(XXssProtectionHeaderWriter.HeaderValue.ENABLED_MODE_BLOCK))
@@ -56,7 +55,8 @@ public class SecurityConfig {
                         "style-src 'self' 'unsafe-inline'; " +
                         "img-src 'self' data:; " +
                         "font-src 'self'; " +
-                        "connect-src 'self'"))
+                        // FIX: tambah ws: agar Vite HMR tidak diblokir CSP saat dev
+                        "connect-src 'self' ws://localhost:* http://localhost:*"))
                 .frameOptions(frame -> frame.deny())
                 .contentTypeOptions(ct -> {})
                 .referrerPolicy(ref -> ref
@@ -68,19 +68,15 @@ public class SecurityConfig {
 
             // ── Authorization ─────────────────────────────────────────
             .authorizeHttpRequests(auth -> auth
-                // Static resources & halaman publik (tidak perlu login)
+                // Public: static assets, auth endpoints
                 .requestMatchers(
                     "/", "/index.html", "/assets/**", "/vite.svg",
-                    // Halaman auth di /pages/ (login & register bisa diakses tanpa token)
                     "/pages/login.html", "/pages/register.html",
-                    // REST API auth (login/register endpoint)
+                    // FIX: pastikan OPTIONS preflight selalu lolos
+                    "/api/auth/login", "/api/auth/register",
                     "/api/auth/**",
-                    // Swagger / API docs
                     "/v3/api-docs/**", "/swagger-ui/**"
                 ).permitAll()
-                // Halaman protected di /pages/ – HTML-nya boleh diakses (JS yg akan
-                // redirect ke login kalau token tidak valid), keamanan data tetap
-                // dijaga oleh JWT di level API
                 .requestMatchers(
                     "/pages/dashboard.html",
                     "/pages/appointments.html",
@@ -88,7 +84,7 @@ public class SecurityConfig {
                     "/pages/doctors.html",
                     "/pages/medical-records.html",
                     "/pages/lab-results.html"
-                ).authenticated()
+                ).permitAll()   // FIX: HTML halaman SPA harus permitAll, auth dijaga JS+API
                 .requestMatchers("/api/users/me").authenticated()
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
                 .requestMatchers("/api/doctor/**").hasAnyRole("PERAWAT", "ADMIN")
@@ -109,7 +105,7 @@ public class SecurityConfig {
 
     @Bean
     public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder(12); // cost factor 12 lebih aman dari default 10
+        return new BCryptPasswordEncoder(12);
     }
 
     @Bean

@@ -17,15 +17,17 @@ public class WebConfig implements WebMvcConfigurer {
 
     /**
      * CORS: izinkan frontend Vite dev server (localhost:5173) saat development.
-     * Di production frontend sudah jadi satu dengan backend (static files).
+     * Di production frontend sudah jadi satu dengan backend (static files),
+     * sehingga request adalah same-origin dan tidak butuh CORS sama sekali.
      */
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/api/**")
-                .allowedOrigins(
-                    "http://localhost:5173",  // Vite dev
-                    "http://localhost:80",
-                    "http://localhost"
+                .allowedOriginPatterns(
+                    "http://localhost:*",   // Semua port localhost (Vite, dll)
+                    "http://127.0.0.1:*",   // localhost via IP
+                    "http://localhost",
+                    "http://localhost:80"
                 )
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                 .allowedHeaders("*")
