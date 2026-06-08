@@ -13,8 +13,9 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * Rate Limiting per-IP menggunakan Token Bucket (Bucket4j).
  *
- * - /api/auth/** → 5 request/menit (cegah brute force login)
- * - Endpoint lain  → 60 request/menit (normal API usage)
+ * - /api/auth/**      → 5 request/menit  (cegah brute force login)
+ * - Static pages      → dilewati (no rate limit, bukan API call)
+ * - Endpoint lain     → 60 request/menit (normal API usage)
  */
 @Component
 public class RateLimitFilter implements Filter {
@@ -48,6 +49,14 @@ public class RateLimitFilter implements Filter {
         String ip  = getClientIp(req);
         String uri = req.getRequestURI();
 
+        // Lewati rate limiting untuk resource statis:
+        // index.html, /pages/*.html, /assets/*, dll.
+        // Halaman HTML bukan API call – tidak perlu dibatasi ketat.
+        if (isStaticResource(uri)) {
+            chain.doFilter(request, response);
+            return;
+        }
+
         boolean isAuthEndpoint = uri.startsWith("/api/auth/");
         Bucket bucket = isAuthEndpoint
                 ? authBuckets.computeIfAbsent(ip, k -> createAuthBucket())
@@ -62,6 +71,26 @@ public class RateLimitFilter implements Filter {
         }
 
         chain.doFilter(request, response);
+    }
+
+    /**
+     * Cek apakah URI adalah static resource (HTML page, asset, dll.)
+     * yang tidak perlu dikenakan rate limiting.
+     */
+    private boolean isStaticResource(String uri) {
+        return uri.equals("/")
+                || uri.equals("/index.html")
+                || uri.startsWith("/pages/")
+                || uri.startsWith("/assets/")
+                || uri.endsWith(".html")
+                || uri.endsWith(".css")
+                || uri.endsWith(".js")
+                || uri.endsWith(".svg")
+                || uri.endsWith(".ico")
+                || uri.endsWith(".png")
+                || uri.endsWith(".jpg")
+                || uri.endsWith(".woff2")
+                || uri.endsWith(".woff");
     }
 
     /** Ambil IP asli, perhatikan reverse-proxy header */

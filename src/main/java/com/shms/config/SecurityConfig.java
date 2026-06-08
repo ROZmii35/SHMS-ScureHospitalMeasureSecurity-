@@ -68,11 +68,27 @@ public class SecurityConfig {
 
             // ── Authorization ─────────────────────────────────────────
             .authorizeHttpRequests(auth -> auth
+                // Static resources & halaman publik (tidak perlu login)
                 .requestMatchers(
                     "/", "/index.html", "/assets/**", "/vite.svg",
+                    // Halaman auth di /pages/ (login & register bisa diakses tanpa token)
+                    "/pages/login.html", "/pages/register.html",
+                    // REST API auth (login/register endpoint)
                     "/api/auth/**",
+                    // Swagger / API docs
                     "/v3/api-docs/**", "/swagger-ui/**"
                 ).permitAll()
+                // Halaman protected di /pages/ – HTML-nya boleh diakses (JS yg akan
+                // redirect ke login kalau token tidak valid), keamanan data tetap
+                // dijaga oleh JWT di level API
+                .requestMatchers(
+                    "/pages/dashboard.html",
+                    "/pages/appointments.html",
+                    "/pages/patients.html",
+                    "/pages/doctors.html",
+                    "/pages/medical-records.html",
+                    "/pages/lab-results.html"
+                ).authenticated()
                 .requestMatchers("/api/users/me").authenticated()
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
                 .requestMatchers("/api/doctor/**").hasAnyRole("PERAWAT", "ADMIN")
