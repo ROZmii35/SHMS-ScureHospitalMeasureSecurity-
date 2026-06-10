@@ -14,6 +14,14 @@ public class WebConfig implements WebMvcConfigurer {
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(interceptor);
     }
+    
+    @Override
+    public void addResourceHandlers(ResourceHandlerRegistry registry) {
+        registry.addResourceHandler("/assets/**")
+                .addResourceLocations("classpath:/static/assets/");
+        registry.addResourceHandler("/**")
+                .addResourceLocations("classpath:/static/");
+    }
 
     /**
      * CORS: izinkan frontend Vite dev server (localhost:5173) saat development.
@@ -27,7 +35,8 @@ public class WebConfig implements WebMvcConfigurer {
                     "http://localhost:*",   // Semua port localhost (Vite, dll)
                     "http://127.0.0.1:*",   // localhost via IP
                     "http://localhost",
-                    "http://localhost:80"
+                    "http://localhost:80",
+		    "https://akuwaras.tail9dbf04.ts.net" // Khusus Jaringan Tailscale Funnel
                 )
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                 .allowedHeaders("*")

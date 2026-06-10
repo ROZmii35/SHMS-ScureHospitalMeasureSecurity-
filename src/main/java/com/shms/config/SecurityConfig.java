@@ -68,23 +68,25 @@ public class SecurityConfig {
 
             // ── Authorization ─────────────────────────────────────────
             .authorizeHttpRequests(auth -> auth
-                // Public: static assets, auth endpoints
+                // 1. WAJIB: Pastikan endpoint otentikasi API dicocokkan secara absolut menggunakan AntPathRequestMatcher
+                .requestMatchers(org.springframework.security.web.util.matcher.AntPathRequestMatcher.antMatcher("/api/auth/**")).permitAll()
+                
+                // 2. Publik: Aset statis & halaman HTML SPA
                 .requestMatchers(
-                    "/", "/index.html", "/assets/**", "/vite.svg",
-                    "/pages/login.html", "/pages/register.html",
-                    // FIX: pastikan OPTIONS preflight selalu lolos
-                    "/api/auth/login", "/api/auth/register",
-                    "/api/auth/**",
-                    "/v3/api-docs/**", "/swagger-ui/**"
+                    org.springframework.security.web.util.matcher.AntPathRequestMatcher.antMatcher("/"),
+                    org.springframework.security.web.util.matcher.AntPathRequestMatcher.antMatcher("/index.html"),
+                    org.springframework.security.web.util.matcher.AntPathRequestMatcher.antMatcher("/assets/**"),
+                    org.springframework.security.web.util.matcher.AntPathRequestMatcher.antMatcher("/vite.svg"),
+                    org.springframework.security.web.util.matcher.AntPathRequestMatcher.antMatcher("/pages/**"),
+                    org.springframework.security.web.util.matcher.AntPathRequestMatcher.antMatcher("/v3/api-docs/**"),
+                    org.springframework.security.web.util.matcher.AntPathRequestMatcher.antMatcher("/swagger-ui/**")
                 ).permitAll()
-                .requestMatchers(
-                    "/pages/dashboard.html",
-                    "/pages/appointments.html",
-                    "/pages/patients.html",
-                    "/pages/doctors.html",
-                    "/pages/medical-records.html",
-                    "/pages/lab-results.html"
-                ).permitAll()   // FIX: HTML halaman SPA harus permitAll, auth dijaga JS+API
+                
+		// 3. FIX: Izinkan semua route teks (halaman dashboard, dll) agar tidak diblokir saat refresh
+    		// Ini membebaskan URL non-API (seperti /dashboard, /appointments) agar bisa dibaca React Router
+    		.requestMatchers(org.springframework.security.web.util.matcher.AntPathRequestMatcher.antMatcher("/{path:[^\\.]*}")).permitAll()
+                
+		// 4. Endpoint Terproteksi Role (Sisa kode Anda ke bawah tetap sama)
                 .requestMatchers("/api/users/me").authenticated()
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
                 .requestMatchers("/api/doctor/**").hasAnyRole("PERAWAT", "ADMIN")
@@ -112,5 +114,18 @@ public class SecurityConfig {
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config)
             throws Exception {
         return config.getAuthenticationManager();
+    }
+    
+    @Bean
+    public org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer webSecurityCustomizer() {
+        return (web) -> web.ignoring()
+            .requestMatchers(
+                "/",
+                "/index.html",
+                "/assets/**",
+                "/vite.svg",
+                "/favicon.ico",
+                "/pages/**"
+            );
     }
 }
